@@ -4,6 +4,7 @@ import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.ThreadContext;
 
 import javax.transaction.Transactional;
 import javax.ws.rs.*;
@@ -28,19 +29,22 @@ public abstract class CrudArchetype<T extends PanacheEntityBase, S> {
     @Produces(MediaType.APPLICATION_JSON)
     @Transactional
     public Response create(T t) {
-        String trace = UUID.randomUUID().toString();
-        LOGGER.log(Level.INFO, "({}) Persist entity: {}", trace, t);
+        ThreadContext.put("id", UUID.randomUUID().toString());
+        LOGGER.log(Level.INFO, "Persist entity: {}", t);
         if (t != null) {
             t.persist();
             if (t.isPersistent()) {
-                LOGGER.log(Level.INFO, "({}) Entity status persist : {}", trace, t.isPersistent());
+                LOGGER.log(Level.INFO, "Entity status persist : {}", t.isPersistent());
+                ThreadContext.clearAll();
                 return Response.ok(t).build();
             } else {
-                LOGGER.log(Level.WARN, "({}) Entity not persist", trace);
+                LOGGER.log(Level.WARN, "Entity not persist");
+                ThreadContext.clearAll();
                 return Response.status(Response.Status.BAD_REQUEST).build();
             }
         }
-        LOGGER.log(Level.ERROR, "({}) Entity not exist", trace);
+        LOGGER.log(Level.ERROR, "Entity not exist");
+        ThreadContext.clearAll();
         return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
     }
 
@@ -54,17 +58,20 @@ public abstract class CrudArchetype<T extends PanacheEntityBase, S> {
     @Produces(MediaType.APPLICATION_JSON)
     @Transactional
     public Response read(S s) {
-        String trace = UUID.randomUUID().toString();
-        LOGGER.log(Level.INFO, "({}) Obtain entity by uuid: {}", trace, s);
+        ThreadContext.put("id", UUID.randomUUID().toString());
+        LOGGER.log(Level.INFO, "Obtain entity by uuid: {}", s);
         if (s != null) {
             T t = T.findById(s);
             if (t != null) {
-                LOGGER.log(Level.DEBUG, "({}) Entity found: {}", trace, t);
+                LOGGER.log(Level.DEBUG, "Entity found: {}", t);
+                ThreadContext.clearAll();
                 return Response.ok(t).build();
             } else {
+                ThreadContext.clearAll();
                 return Response.status(Response.Status.BAD_REQUEST).build();
             }
         }
+        ThreadContext.clearAll();
         return Response.status(Response.Status.BAD_REQUEST).build();
     }
 
@@ -80,12 +87,14 @@ public abstract class CrudArchetype<T extends PanacheEntityBase, S> {
     @Produces(MediaType.APPLICATION_JSON)
     @Transactional
     public Response update(T t, @PathParam("uuid") S uuid) {
-        String trace = UUID.randomUUID().toString();
-        LOGGER.log(Level.INFO, "({}) Update entity: {} by id: {}", trace, t, uuid);
+        ThreadContext.put("id", UUID.randomUUID().toString());
+        LOGGER.log(Level.INFO, "Update entity: {} by id: {}", t, uuid);
         if (t != null) {
             t.persist();
+            ThreadContext.clearAll();
             return Response.ok(t).build();
         } else {
+            ThreadContext.clearAll();
             return Response.status(Response.Status.BAD_REQUEST).build();
         }
     }
@@ -102,12 +111,14 @@ public abstract class CrudArchetype<T extends PanacheEntityBase, S> {
     @Produces(MediaType.APPLICATION_JSON)
     @Transactional
     public Response delete(T t, @PathParam("uuid") S uuid) {
-        String trace = UUID.randomUUID().toString();
-        LOGGER.log(Level.INFO, "({}) Update entity: {} by id: {}", trace, t, uuid);
+        ThreadContext.put("id", UUID.randomUUID().toString());
+        LOGGER.log(Level.INFO, "Update entity: {} by id: {}", t, uuid);
         if (t != null) {
             t.delete();
+            ThreadContext.clearAll();
             return Response.ok(t).build();
         } else {
+            ThreadContext.clearAll();
             return Response.status(Response.Status.BAD_REQUEST).build();
         }
     }
