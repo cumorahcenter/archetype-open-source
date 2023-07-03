@@ -64,6 +64,7 @@ public abstract class CrudArchetype<T extends PanacheEntityBase, S> {
             T t = T.findById(s);
             if (t != null) {
                 LOGGER.log(Level.DEBUG, "Entity found: {}", t);
+                //log.info("Entity found: {}", t);
                 ThreadContext.clearAll();
                 return Response.ok(t).build();
             } else {
